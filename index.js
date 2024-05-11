@@ -62,11 +62,24 @@ async function run() {
             console.log(myQueries);
             const id = req.params.id
             const filter = { _id: new ObjectId(id) };
-            // const updateDoc = {
-            //     $set: {
-            //         plot: `A harvest of random numbers, such as: ${Math.random()}`
-            //     },
-            // };
+            const updateDoc = {
+                $set: {
+                    productName: myQueries.productName,
+                    productBrand: myQueries.productBrand,
+                    productImg: myQueries.productImg,
+                    queryTitel: myQueries.queryTitel,
+                    boycottingReason: myQueries.boycottingReason
+                },
+            };
+            const result = await queriesCollection.updateOne(filter, updateDoc);
+            res.send(result)
+        })
+
+        app.delete('/my-queries/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) };
+            const result = await queriesCollection.deleteOne(query);
+            res.send(result)
         })
 
         await client.db("admin").command({ ping: 1 });

@@ -43,12 +43,30 @@ async function run() {
             const result = await cursor.sort({ _id: -1 }).toArray()
             res.send(result)
         })
-      
+
         app.get('/my-queries/:id', async (req, res) => {
             const id = req.params.id
             const query = { _id: new ObjectId(id) };
             const result = await queriesCollection.findOne(query);
             res.send(result)
+        })
+        app.get('/my-queries/update/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) };
+            const result = await queriesCollection.findOne(query);
+            res.send(result)
+        })
+
+        app.put('/my-queries/update/:id', async (req, res) => {
+            const myQueries = req.body
+            console.log(myQueries);
+            const id = req.params.id
+            const filter = { _id: new ObjectId(id) };
+            // const updateDoc = {
+            //     $set: {
+            //         plot: `A harvest of random numbers, such as: ${Math.random()}`
+            //     },
+            // };
         })
 
         await client.db("admin").command({ ping: 1 });

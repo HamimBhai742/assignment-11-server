@@ -52,6 +52,18 @@ async function run() {
             const result = await cursor.sort({ _id: -1 }).toArray()
             res.send(result)
         })
+        app.get('/queries', async (req, res) => {
+            const cursor = queriesCollection.find()
+            const result = await cursor.sort({ _id: -1 }).toArray()
+            res.send(result)
+        })
+
+        app.get('/query-details/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) };
+            const result = await queriesCollection.findOne(query);
+            res.send(result)
+        })
 
         app.get('/my-queries/:id', async (req, res) => {
             const id = req.params.id
@@ -59,6 +71,7 @@ async function run() {
             const result = await queriesCollection.findOne(query);
             res.send(result)
         })
+
         app.get('/my-queries/update/:id', async (req, res) => {
             const id = req.params.id
             const query = { _id: new ObjectId(id) };

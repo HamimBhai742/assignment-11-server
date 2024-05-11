@@ -65,6 +65,20 @@ async function run() {
             res.send(result)
         })
 
+        app.patch('/query-details/:id', async (req, res) => {
+            let count = req.body
+            console.log(count.count);
+            const id = req.params.id
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    recommendationCount: count.count
+                },
+            };
+            const result = await queriesCollection.updateOne(filter, updateDoc);
+            res.send(result)
+        })
+
         app.get('/my-queries/:id', async (req, res) => {
             const id = req.params.id
             const query = { _id: new ObjectId(id) };

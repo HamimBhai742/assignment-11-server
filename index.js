@@ -39,6 +39,7 @@ async function run() {
         // Send a ping to confirm a successful connection
         const database = client.db("queriesDB");
         const queriesCollection = database.collection("queries");
+        const recommendationCollection = database.collection("recommendation");
 
         app.post('/add-queries', async (req, res) => {
             const addQueries = req.body
@@ -67,7 +68,7 @@ async function run() {
 
         app.patch('/query-details/:id', async (req, res) => {
             let count = req.body
-            console.log(count.count);
+            console.log(count);
             const id = req.params.id
             const filter = { _id: new ObjectId(id) };
             const updateDoc = {
@@ -115,6 +116,30 @@ async function run() {
             const id = req.params.id
             const query = { _id: new ObjectId(id) };
             const result = await queriesCollection.deleteOne(query);
+            res.send(result)
+        })
+
+        // Recommendation Api
+
+        app.post('/add-recommendation', async (req, res) => {
+            const recommendaton = req.body
+            console.log(recommendaton);
+            const result = await recommendationCollection.insertOne(recommendaton);
+            res.send(result)
+        })
+
+        app.get('/recommendation', async (req, res) => {
+            const cursor = recommendationCollection.find()
+            const result = await cursor.toArray()
+            res.send(result)
+        })
+
+        app.get('/recommendation/:id', async (req, res) => {
+            const id = req.params.id
+            console.log(id);
+            const query = { queryId: id };
+            console.log(query);
+            const result = await recommendationCollection.find(query).toArray();
             res.send(result)
         })
 

@@ -58,6 +58,12 @@ async function run() {
             const result = await cursor.sort({ _id: -1 }).toArray()
             res.send(result)
         })
+        app.get('/queries/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) };
+            const result = await queriesCollection.findOne(query);
+            res.send(result)
+        })
 
         app.get('/query-details/:id', async (req, res) => {
             const id = req.params.id
@@ -74,6 +80,21 @@ async function run() {
             const updateDoc = {
                 $set: {
                     recommendationCount: count.count
+                },
+            };
+            const result = await queriesCollection.updateOne(filter, updateDoc);
+            res.send(result)
+        })
+
+
+        app.patch('/queries/:id', async (req, res) => {
+            let decount = req.body
+            console.log(decount);
+            const id = req.params.id
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    recommendationCount: decount.newCount
                 },
             };
             const result = await queriesCollection.updateOne(filter, updateDoc);

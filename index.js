@@ -134,12 +134,45 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/recommendation/:id', async (req, res) => {
+
+
+        app.get('/recommendation/:email', async (req, res) => {
+            const em = req.params.email
+            console.log(em);
+            const query = { recommenderEmail: em }
+            const result = await recommendationCollection.find(query).toArray();
+            res.send(result)
+            // const cursor = recommendationCollection.find()
+            // const result = await cursor.toArray()
+            // res.send(result)
+        })
+
+        app.get('/recommendation/perticular/:id', async (req, res) => {
             const id = req.params.id
             console.log(id);
             const query = { queryId: id };
             console.log(query);
             const result = await recommendationCollection.find(query).toArray();
+            res.send(result)
+        })
+
+        app.get('/my-recommendation', async (req, res) => {
+            const cursor = recommendationCollection.find()
+            const result = await cursor.toArray()
+            res.send(result)
+        })
+
+        app.get('/my-recommendation/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) };
+            const result = await recommendationCollection.findOne(query);
+            res.send(result)
+        })
+
+        app.delete('/my-recommendation/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) };
+            const result = await recommendationCollection.deleteOne(query);
             res.send(result)
         })
 

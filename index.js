@@ -1,5 +1,7 @@
 const express = require('express')
 const cors = require('cors')
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser')
 require('dotenv').config()
 const app = express()
 const port = process.env.PORT || 5000
@@ -15,14 +17,15 @@ app.use(cors(
         credentials: true,
     }
 ))
-app.use(express.json())
 
+app.use(express.json())
+app.use(cookieParser())
 
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.bls3tyg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-console.log(uri);
+console.log(process.env.ACCESS_TOKEN_SECRECT);
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
     serverApi: {
@@ -31,6 +34,32 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+
+
+const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+};
+
+
+const verifyToken = (req, res, next) => {
+    const token = req?.cookies?.token
+    req.user = token
+    if (!token) {
+        return res.status(401).send({ message: 'unothrize access' })
+    }
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRECT, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ message: 'unothrize access' })
+        }
+        console.log('decoded:', decoded);
+        req.user = decoded
+        next()
+    })
+    console.log('ver fy tuedf', token);
+}
+
 
 async function run() {
     try {
@@ -41,14 +70,40 @@ async function run() {
         const queriesCollection = database.collection("queries");
         const recommendationCollection = database.collection("recommendation");
 
+        app.post('/jwt', async (req, res) => {
+            const user = req.body
+            const token = jwt.sign({
+                user
+            }, process.env.ACCESS_TOKEN_SECRECT, { expiresIn: '1h' });
+            res.
+                cookie('token', token, cookieOptions)
+                .send({ success: true })
+        })
+
+        app.post('/logout', async (req, res) => {
+            const user = req.body
+            console.log('logout user:', user);
+            res.clearCookie('token', { ...cookieOptions, maxAge: 0 }).send({ success: true })
+        })
+
         app.post('/add-queries', async (req, res) => {
             const addQueries = req.body
-            // console.log(addQueries);
+
             const result = await queriesCollection.insertOne(addQueries);
             res.send(result)
         })
 
-        app.get('/my-queries', async (req, res) => {
+        app.get('/my-queries', verifyToken, async (req, res) => {
+            console.log('tok', req.cookies);
+            console.log(req.user);
+            let query = {}
+            console.log(req.query.email);
+            if (req.query.email !== req.user.user.email) {
+                return res.status(403).send({ message: 'forbdden access' })
+            }
+            if (req.query?.email) {
+                query = { email: req.query.email }
+            }
             const cursor = queriesCollection.find()
             const result = await cursor.sort({ _id: -1 }).toArray()
             res.send(result)
@@ -197,7 +252,7 @@ async function run() {
             res.send(result)
         })
 
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
